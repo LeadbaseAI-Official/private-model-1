@@ -4,27 +4,33 @@ on:
   workflow_dispatch:
 
 jobs:
-  download:
+  download-cache:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Restore cache
-        id: restore
+        id: cache
         uses: actions/cache/restore@v4
         with:
           path: cache
-          key: prefix-state-e7e2b600b801d8cca9e210db273a618368674fe436c065f4b321e3bd4c38b25c-v3
-          fail-on-cache-miss: true
+          key: temp-key
+          restore-keys: |
+            prefix-state-
 
-      - name: Show restored files
+      - name: Check restored files
         run: |
-          echo "Cache hit: ${{ steps.restore.outputs.cache-hit }}"
-          ls -lahR cache
+          echo "Cache hit: ${{ steps.cache.outputs.cache-hit }}"
+          echo "Matched key: ${{ steps.cache.outputs.cache-primary-key }}"
+          pwd
+          ls -lah
+          ls -lahR cache || true
+          du -sh cache || true
 
-      - name: Upload as artifact
+      - name: Upload restored cache
         uses: actions/upload-artifact@v4
         with:
           name: restored-cache
           path: cache
+          if-no-files-found: warn
